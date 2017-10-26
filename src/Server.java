@@ -1,0 +1,202 @@
+import javax.crypto.spec.SecretKeySpec;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.Scanner;
+import java.util.Vector;
+
+/**
+ * Server application for Java socket programming with multithreading.
+ * Opens a server socket and listens for clients.  When one connects
+ * a thread is spawned to deal with the client.
+ */
+
+public class Server
+{
+    private ServerSocket serversock;
+    private Vector <ServerThread> serverthreads;  //holds the active threads
+    private boolean shutdown;  //allows clients to shutdown the server
+    private int clientcounter;  //id numbers for the clients
+
+    private boolean debugOn;
+    private SecretKeySpec sec_key_spec = null;
+
+    /**
+     * Main method
+     * @param args First argument should be the port to listen on.
+     */
+    public static void main (String [] args)
+    {
+        if (args.length != 1 && args.length != 2) {
+            System.out.println ("Usage: java Server port#");
+            return;
+        }
+
+        try {
+            boolean debugOn = false;
+            if (args.length == 2 && args[1].toLowerCase().equals("debug")) {
+                debugOn = true;
+            } else if (args.length == 2) {
+                System.out.println ("Usage: java Server port#");
+                return;
+            }
+            Server s = new Server (Integer.parseInt(args[0]),debugOn);
+        }
+        catch (ArrayIndexOutOfBoundsException e) {
+            System.out.println ("Usage: java Server port#");
+            System.out.println ("Second argument is not a port number.");
+            return;
+        }
+        catch (NumberFormatException e) {
+            System.out.println ("Usage: java Server port#");
+            System.out.println ("Second argument is not a port number.");
+            return;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Constructor, makes a new server listening on specified port.
+     * @param port The port to listen on.
+     */
+    public Server (int port, boolean debugOn) throws Exception {
+        this.debugOn = debugOn;
+
+        clientcounter = 0;
+        shutdown = false;
+        try {
+            serversock = new ServerSocket (port);
+        }
+        catch (IOException e) {
+            System.out.println ("Could not create server socket.");
+            return;
+        }
+	    /* Server socket open, make a vector to store active threads. */
+        serverthreads = new Vector <ServerThread> (0,1);
+
+	    /* Output connection info for the server */
+        System.out.println ("Server IP address: " + serversock.getInetAddress().getHostAddress() + ",  port " + port);
+
+        BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
+        System.out.println("Enter the seed for decryption: ");
+        String seed = stdIn.readLine();
+
+        //key setup - generate 128 bit key
+        byte[] hashed_seed =  sha1_hash(seed.getBytes());
+        byte[] aes_hashed_seed = Arrays.copyOf(hashed_seed,16);
+        this.sec_key_spec = new SecretKeySpec(aes_hashed_seed, "AES");
+
+        if (debugOn) {
+            System.out.println(String.format("Server: Using seed %s to encrypt files.",seed));
+            System.out.println(String.format("Server: Secret key hash code is %d.",this.sec_key_spec.hashCode()));
+        }
+
+
+
+	    /* listen on the socket for connections. */
+        listen ();
+    }
+
+    /**
+     * Allows threads to check and see if the server is shutting down.
+     * @return True if the server has been told to shutdown.
+     */
+    public boolean getFlag ()
+    {
+        return shutdown;
+    }
+
+    /**
+     * Called by a thread who's client has asked to exit.  Gets rid of the thread.
+     * @param st The ServerThread to remove from the vector of active connections.
+     */
+    public void kill (ServerThread st)
+    {
+        System.out.println ("Killing Client " + st.getID() + ".");
+
+	/* Find the thread in the vector and remove it. */
+        for (int i = 0; i < serverthreads.size(); i++) {
+            if (serverthreads.elementAt(i) == st)
+                serverthreads.remove(i);
+        }
+    }
+
+    /**
+     * Called by a thread who's client has instructed the server to shutdown.
+     */
+    public void killall ()
+    {
+        shutdown = true;
+        System.out.println ("Shutting Down Server.");
+
+        /* For each active thread, close it's socket.  This will cause the thread
+         * to stop blocking because of the IO operation, and check the shutdown flag.
+         * The thread will then exit itself when it sees shutdown is true.  Then exits. */
+        for (int i = serverthreads.size() - 1; i >= 0; i--) {
+            try {
+                System.out.println ("Killing Client " + serverthreads.elementAt(i).getID() + ".");
+                serverthreads.elementAt(i).getSocket().close();
+            }
+            catch (IOException e)
+            {System.out.println ("Could not close socket.");}
+            serverthreads.remove(i);
+        }
+        try {
+            serversock.close();
+        }
+        catch (IOException e) {
+            System.out.println ("Could not close server socket.");
+        }
+    }
+
+    /**
+     * Waits for incoming connections and spins off threads to deal with them.
+     */
+    private void listen ()
+    {
+        Socket client = new Socket ();
+        ServerThread st;
+
+	    /* Should only do this when it hasn't been told to shutdown. */
+        while (!shutdown) {
+            /* Try to accept an incoming connection. */
+            try {
+                client = serversock.accept ();
+		        /* Output info about the client */
+                System.out.println ("Client on machine " + client.getInetAddress().getHostAddress() + " has connected on port " + client.getLocalPort() + ".");
+
+                /* Create a new thread to deal with the client, add it to the vector of open connections.
+                 * Finally, start the thread's execution. Start method makes the threads go by calling their
+                 * run() methods. */
+                st = new ServerThread (client, this, clientcounter++,this.sec_key_spec,debugOn);
+                serverthreads.add (st);
+                st.start ();
+            }
+            catch (IOException e) {
+		    /* Server Socket is closed, probably because a client told the server to shutdown */
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public byte[] sha1_hash(byte[] input_data) throws Exception{
+        byte[] hashval = null;
+        try{
+            //create message digest object
+            MessageDigest sha1 = MessageDigest.getInstance("SHA1");
+
+            //make message digest
+            hashval = sha1.digest(input_data);
+        }
+        catch(NoSuchAlgorithmException nsae){
+            System.out.println(nsae);
+        }
+        return hashval;
+    }
+}
