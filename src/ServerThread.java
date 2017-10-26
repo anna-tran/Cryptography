@@ -1,3 +1,14 @@
+/**
+ * Structure taken from the CPSC 418 - Fall 2017 website.
+ * Modified by: Anna Tran
+ * Student ID: 10128425
+ * File: ServerThread.java
+ *
+ * Thread to deal with clients who connect to Server. It takes encrypted files from the client,
+ * decrypts the message and reports whether confidentiality and integrity have been upheld back
+ * to the client.
+ */
+
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.net.*;
@@ -6,10 +17,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
-/**
- * Thread to deal with clients who connect to Server.  Put what you want the
- * thread to do in it's run() method.
- */
 
 public class ServerThread extends Thread
 {
@@ -105,6 +112,8 @@ public class ServerThread extends Thread
             if (debugOn && read_result != -1) {
                 System.out.println(String.format("Client %d: Read in destination file name -- %s",idnum, destFileName));
                 System.out.println(String.format("Client %d: Waiting for source file length",idnum));
+            } else if (read_result == -1) {
+                throw new IOException();
             }
 
             // read in number of source file bytes
@@ -119,6 +128,8 @@ public class ServerThread extends Thread
             if (debugOn && read_result != -1) {
                 System.out.println(String.format("Client %d: Read in source file length -- %d",idnum,msg_length));
                 System.out.println(String.format("Client %d: Waiting for source file contents",idnum));
+            } else if (read_result == -1) {
+                throw new IOException();
             }
 
             // read in ciphertext
@@ -131,6 +142,8 @@ public class ServerThread extends Thread
 
             if (debugOn && read_result != -1) {
                 System.out.println(String.format("Client %d: Read in source file contents",idnum));
+            } else if (read_result == -1) {
+                throw new IOException();
             }
 
 
@@ -166,6 +179,8 @@ public class ServerThread extends Thread
         }
 
     }
+
+
 
     /**
      * Prints a result message to the client's screen and closes all streams

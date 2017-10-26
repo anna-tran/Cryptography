@@ -1,4 +1,4 @@
-package A1; /******************************************************************************
+/******************************************************************************
  File: 	        decryptFile.java
  Purpose:       Java decryption program for cryptographic primitives
  Created:	    February 24, 2008

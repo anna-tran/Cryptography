@@ -1,16 +1,22 @@
+/**
+ * Structure taken from the CPSC 418 - Fall 2017 website.
+ * Modified by: Anna Tran
+ * Student ID: 10128425
+ * File: Client.java
+ *
+ * Client program.  Connects to the server and sends files appended with the
+ * file message digest, and encrypted using AES to the server.
+ */
+
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
 import java.net.*;
-import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
-/**
- * Client program.  Connects to the server and sends text accross.
- */
 
 public class Client
 {
@@ -23,6 +29,7 @@ public class Client
     /**
      * Main method, starts the client.
      * @param args args[0] needs to be a hostname, args[1] a port number.
+     *             arg[2] is an optional "debug" flag
      */
     public static void main (String [] args)
     {
@@ -194,7 +201,7 @@ public class Client
     private String tryReadLine(BufferedReader stdIn) throws Exception{
         String userInput = stdIn.readLine();
         if (userInput == null)
-            throw new Exception("Could not read from input.");
+            throw new IOException();
         else
             return userInput;
     }

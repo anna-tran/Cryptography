@@ -1,3 +1,14 @@
+/**
+ * Structure taken from the CPSC 418 - Fall 2017 website.
+ * Modified by: Anna Tran
+ * Student ID: 10128425
+ * File: Server.java
+ *
+ * Server application for Java socket programming with multithreading.
+ * Opens a server socket and listens for clients.  When one connects
+ * a thread is spawned to deal with the client.
+ */
+
 import javax.crypto.spec.SecretKeySpec;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -6,14 +17,7 @@ import java.net.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.Scanner;
 import java.util.Vector;
-
-/**
- * Server application for Java socket programming with multithreading.
- * Opens a server socket and listens for clients.  When one connects
- * a thread is spawned to deal with the client.
- */
 
 public class Server
 {
@@ -28,6 +32,7 @@ public class Server
     /**
      * Main method
      * @param args First argument should be the port to listen on.
+     *             Second argument is an optional "debug" flag
      */
     public static void main (String [] args)
     {

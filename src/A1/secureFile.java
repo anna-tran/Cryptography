@@ -1,4 +1,4 @@
-package A1; /******************************************************************************
+/******************************************************************************
  File: 	        secureFile.java
  Purpose:       Java decryption program for cryptographic primitives
  Created:	    February 24, 2008
@@ -105,7 +105,7 @@ public class secureFile {
     public static void main(String[] args) throws IOException {
         FileInputStream plaintext_file = null;
         String seed = "";
-        FileOutputStream out_file = new FileOutputStream("A1/encrypted_file");
+        FileOutputStream out_file = new FileOutputStream("encrypted_file");
         byte[] msg_digest = null;
         byte[] aes_ciphertext = null;
 
@@ -121,6 +121,7 @@ public class secureFile {
             byte[] hashed_seed =  sha1_hash(seed.getBytes());
             byte[] aes_hashed_seed = Arrays.copyOf(hashed_seed,16);
             sec_key_spec = new SecretKeySpec(aes_hashed_seed, "AES");
+            System.out.println("secret key hash code: " + sec_key_spec.hashCode());
 
             //create the cipher object that uses AES as the algorithm
             sec_cipher = Cipher.getInstance("AES");
