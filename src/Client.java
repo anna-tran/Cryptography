@@ -13,6 +13,7 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
 import java.net.*;
+import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -73,7 +74,7 @@ public class Client
 
 	/* Allows us to get input from the keyboard. */
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
-        OutputStream out;
+        DataOutputStream out;
         InputStream in;
         String seed, source, destination;
 
@@ -95,7 +96,7 @@ public class Client
         System.out.println ("Connected to " + sock.getInetAddress().getHostAddress() + " on port " + port);
 
         try {
-            out = new BufferedOutputStream(sock.getOutputStream());
+            out = new DataOutputStream(sock.getOutputStream());
             in = sock.getInputStream();
         }
         catch (IOException e) {
@@ -148,7 +149,7 @@ public class Client
             if (debugOn) {
                 System.out.println("-- Writing destination file name to server");
             }
-            out.write(destination.getBytes());
+            out.writeBytes(destination);
             out.flush();
 
             Thread.sleep(100);
@@ -156,7 +157,7 @@ public class Client
             if (debugOn) {
                 System.out.println("-- Writing source file size in bytes to server");
             }
-            out.write((fileBytes.length));
+            out.writeInt(fileBytes.length);
             out.flush();
 
             Thread.sleep(100);

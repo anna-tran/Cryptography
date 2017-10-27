@@ -78,15 +78,14 @@ public class ServerThread extends Thread
      */
     public void run ()
     {
-        InputStream is = null;
-        OutputStream os = null;
+        DataInputStream is = null;
+        DataOutputStream os = null;
         byte[] destination,msg_len_bytes,ciphtext_bytes;
         int msg_length = 0;
-        int read_result;
 
         try {
-            is = sock.getInputStream();
-            os = new BufferedOutputStream(sock.getOutputStream());
+            is = new DataInputStream(sock.getInputStream());
+            os = new DataOutputStream(sock.getOutputStream());
         }
         catch (UnknownHostException e) {
             System.out.println ("Unknown host error.");
@@ -125,9 +124,7 @@ public class ServerThread extends Thread
 
             while (is.available() == 0)
                 Thread.sleep(20);
-            msg_len_bytes = new byte[is.available()];
-            readIntoBuffer(is,destination);
-            msg_length = msg_len_bytes[0];
+            msg_length = is.readInt();
 
             System.out.println(String.format("Client %d: Source file size -- %d",idnum,msg_length));
 
@@ -190,7 +187,8 @@ public class ServerThread extends Thread
      * @return
      * @throws Exception    if input stream cannot read bytes to buffer
      */
-    private void readIntoBuffer(InputStream is, byte[] buffer) throws Exception{
+    private void readIntoBuffer(DataInputStream is, byte[] buffer) throws Exception{
+
         int result = is.read(buffer);
         if (result == -1)
             throw new IOException();
