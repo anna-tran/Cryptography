@@ -60,7 +60,8 @@ not encrypted and decrypted properly.
 
 ## File transfer protocol
 
-* All protocol messages sent in byte format
+* Message length of the source file written and received as an integer
+* All other protocol messages sent in byte format
 * Client to server
     1. Convert seed using PRNG, in this case JCA SHA1 hash, into a 128-bit secret key.
     2. Create the message digest by applying the JCA SHA1 hash on the file contents. The digest is exactly 20
