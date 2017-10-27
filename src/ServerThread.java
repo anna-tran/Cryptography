@@ -127,8 +127,8 @@ public class ServerThread extends Thread
             msg_length = msg_len_bytes[0];
 
             System.out.println(String.format("Client %d: Source file size -- %d",idnum,msg_length));
-            if (debugOn) {
 
+            if (debugOn) {
                 System.out.println(String.format("-- Client %d: Waiting for source file contents",idnum));
             }
 
@@ -141,8 +141,7 @@ public class ServerThread extends Thread
             readIntoBuffer(is,destination);
 
             if (debugOn) {
-                System.out.println(String.format("Client %d: Read in source file contents",idnum));
-                System.out.println(String.format("Client %d: Decrypting file with AES and seed key",idnum));
+                System.out.println(String.format("-- Client %d: Read in source file contents",idnum));
             }
 
 
