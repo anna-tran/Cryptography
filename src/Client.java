@@ -156,7 +156,7 @@ public class Client
             if (debugOn) {
                 System.out.println("-- Writing source file size in bytes to server");
             }
-            out.write((byte)(fileBytes.length));
+            out.write((fileBytes.length));
             out.flush();
 
             Thread.sleep(100);
