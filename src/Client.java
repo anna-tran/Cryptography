@@ -69,6 +69,7 @@ public class Client
     public Client (String ipaddress, int port, boolean debugOn) throws Exception
     {
         this.debugOn = debugOn;
+        this.sec_cipher = Cipher.getInstance("AES");
 
 	/* Allows us to get input from the keyboard. */
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
@@ -233,14 +234,13 @@ public class Client
      * @throws Exception
      */
     private byte[] encryptFile(byte[] msg) throws Exception {
-        //create the cipher object that uses AES as the algorithm
-        sec_cipher = Cipher.getInstance("AES");
-
-        if (debugOn) {
-            System.out.println("-- Encrypting message with AES");
-        }
         //create message digest
         byte[] msg_digest = sha1_hash(msg);
+        if (debugOn) {
+            System.out.println("-- Encrypting message with AES");
+            System.out.println("-- Message Digest: " + toHexString(msg_digest));
+        }
+
 
         byte[] new_msg = new byte[msg.length + 20];
         System.arraycopy(msg,0,new_msg,0,msg.length);
@@ -248,6 +248,7 @@ public class Client
 
         //do AES encryption
         return aes_encrypt(new_msg);
+
     }
 
     /**
