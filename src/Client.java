@@ -142,7 +142,7 @@ public class Client
             System.out.println("Enter the destination file name: ");
             destination = tryReadLine(stdIn);
 
-            System.out.println(String.format("Destination file: %d", destination));
+            System.out.println(String.format("Destination file: %s", destination));
 
             if (debugOn) {
                 System.out.println("-- Writing destination file name to server");
