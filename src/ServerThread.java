@@ -206,12 +206,12 @@ public class ServerThread extends Thread
     private void printDecryptionResult(OutputStream os, InputStream is, int result) {
         String resultMsg = "";
         if (result == 1) {
-            resultMsg = String.format("Client %d: Message was decrypted successfully!",idnum);
+            resultMsg = "Message was decrypted successfully!";
         } else {
-            resultMsg = String.format("Client %d: Error in receiving/decrypting message!",idnum);
+            resultMsg = "Error in receiving/decrypting message!";
         }
 
-        System.out.println(resultMsg);
+        System.out.println(String.format("Client %d: %s!",idnum,resultMsg));
         try {
             if (debugOn) {
                 System.out.println(String.format("Client %d: Writing response to client",idnum));
