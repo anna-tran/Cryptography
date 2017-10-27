@@ -9,6 +9,8 @@
  * to the client.
  */
 
+import jdk.internal.util.xml.impl.Input;
+
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.net.*;
@@ -98,7 +100,8 @@ public class ServerThread extends Thread
 
 
             if (debugOn) {
-                System.out.println(String.format("Client %d: Waiting for destination file name",idnum));
+                System.out.println(String.format("-- Client %d: Starting file transfer",idnum));
+                System.out.println(String.format("-- Client %d: Waiting for destination file name",idnum));
             }
 
             // read in destination file name bytes
@@ -106,14 +109,13 @@ public class ServerThread extends Thread
             while (is.available() == 0)
                 Thread.sleep(20);
             destination = new byte[is.available()];
-            read_result = is.read(destination);
+            readIntoBuffer(is,destination);
             String destFileName = new String(destination);
 
-            if (debugOn && read_result != -1) {
-                System.out.println(String.format("Client %d: Read in destination file name -- %s",idnum, destFileName));
-                System.out.println(String.format("Client %d: Waiting for source file length",idnum));
-            } else if (read_result == -1) {
-                throw new IOException();
+            System.out.println(String.format("Client %d: Output file -- %s", idnum, destFileName));
+
+            if (debugOn) {
+                System.out.println(String.format("-- Client %d: Waiting for source file size",idnum));
             }
 
             // read in number of source file bytes
@@ -122,14 +124,13 @@ public class ServerThread extends Thread
             while (is.available() == 0)
                 Thread.sleep(20);
             msg_len_bytes = new byte[is.available()];
-            read_result = is.read(msg_len_bytes);
+            readIntoBuffer(is,destination);
             msg_length = msg_len_bytes[0];
 
-            if (debugOn && read_result != -1) {
-                System.out.println(String.format("Client %d: Read in source file length -- %d",idnum,msg_length));
-                System.out.println(String.format("Client %d: Waiting for source file contents",idnum));
-            } else if (read_result == -1) {
-                throw new IOException();
+            System.out.println(String.format("Client %d: Source file size -- %d",idnum,msg_length));
+            if (debugOn) {
+
+                System.out.println(String.format("-- Client %d: Waiting for source file contents",idnum));
             }
 
             // read in ciphertext
@@ -138,12 +139,11 @@ public class ServerThread extends Thread
             while (is.available() == 0)
                 Thread.sleep(20);
             ciphtext_bytes = new byte[is.available()];
-            read_result = is.read(ciphtext_bytes);
+            readIntoBuffer(is,destination);
 
-            if (debugOn && read_result != -1) {
+            if (debugOn) {
                 System.out.println(String.format("Client %d: Read in source file contents",idnum));
-            } else if (read_result == -1) {
-                throw new IOException();
+                System.out.println(String.format("Client %d: Decrypting file with AES and seed key",idnum));
             }
 
 
@@ -154,6 +154,9 @@ public class ServerThread extends Thread
             // 1 - digest correct
             // otherwise digest incorrect
             if (result == 1) {
+                if (debugOn) {
+                    System.out.println(String.format("-- Client %d: Writing to destination file %s",idnum,destFileName));
+                }
                 FileOutputStream out_file = new FileOutputStream(destFileName);
                 out_file.write(msg_and_digest[0]);
                 out_file.close();
@@ -180,6 +183,19 @@ public class ServerThread extends Thread
 
     }
 
+    /**
+     * Reads input stream data into the given buffer. If read() is not properly executed, throw an exception.
+     * @param is        input stream
+     * @param buffer    buffer to read bytes in
+     * @return
+     * @throws Exception    if input stream cannot read bytes to buffer
+     */
+    private void readIntoBuffer(InputStream is, byte[] buffer) throws Exception{
+        int result = is.read(buffer);
+        if (result == -1)
+            throw new IOException();
+    }
+
 
 
     /**
@@ -192,15 +208,22 @@ public class ServerThread extends Thread
     private void printDecryptionResult(OutputStream os, InputStream is, int result) {
         String resultMsg = "";
         if (result == 1) {
-            resultMsg = String.format("Server: Message was decrypted successfully!");
+            resultMsg = String.format("Client %d: Message was decrypted successfully!",idnum);
         } else {
-            resultMsg = String.format("Server: Error in receiving/decrypting message!");
+            resultMsg = String.format("Client %d: Error in receiving/decrypting message!",idnum);
         }
 
         System.out.println(resultMsg);
         try {
+            if (debugOn) {
+                System.out.println(String.format("Client %d: Writing response to client",idnum));
+            }
             os.write(resultMsg.getBytes());
             os.flush();
+
+            if (debugOn) {
+                System.out.println(String.format("Client %d: Closing open streams",idnum));
+            }
             parent.kill(this);
             is.close();
             sock.close();
@@ -217,6 +240,9 @@ public class ServerThread extends Thread
      * @throws Exception
      */
     public int verifyDigest(byte[] msg_bytes, byte[] digest_bytes) throws Exception {
+        if (debugOn) {
+            System.out.println(String.format("-- Client %d: Verifying message digest",idnum));
+        }
         // verify that digest is the same
         byte[] msg_digest = sha1_hash(msg_bytes);
 
@@ -242,9 +268,18 @@ public class ServerThread extends Thread
      * @throws Exception
      */
     public byte[][] decryptFileIntoMsgAndDigest(byte[] ciphtext, int msg_length) throws Exception {
+        if (debugOn) {
+            System.out.println(String.format("-- Client %d: Decrypting file with AES and seed key",idnum));
+        }
         byte[] decrypted_bytes = aes_decrypt(ciphtext);
+
+        if (debugOn) {
+            System.out.println(String.format("-- Client %d: Splitting file contents and MAC",idnum));
+        }
+
         byte[] msg_bytes = new byte[msg_length];
         byte[] digest_bytes = new byte[20];
+
 
         System.arraycopy(decrypted_bytes,0,msg_bytes,0,msg_length);
         System.arraycopy(decrypted_bytes,msg_bytes.length,digest_bytes,0,digest_bytes.length);

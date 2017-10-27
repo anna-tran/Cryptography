@@ -106,64 +106,81 @@ public class Client
 	    /* Wait for the user to type stuff. */
         try {
             // get seed
+
+            if (debugOn) {
+                System.out.println(String.format("-- Getting key (seed) from user"));
+            }
+
             System.out.println("Enter the seed for the encryption: ");
             seed = tryReadLine(stdIn);
             readSeed(seed);
 
+
             if (debugOn) {
-                System.out.println("-- Read in seed.");
+                System.out.println(String.format("-- Starting file transfer"));
+                System.out.println(String.format("-- Reading in source file name"));
             }
-
-
             // get source file
             System.out.println("Enter the source file name: ");
             source = tryReadLine(stdIn);
+
+            System.out.println(String.format("Source file: %s",source));
+
+            if (debugOn) {
+                System.out.println("-- Encrypting source file contents, appended with digest");
+            }
+
             byte[] fileBytes = readSourceFile(source);
             byte[] aes_ciphertext = encryptFile(fileBytes);
 
             if (debugOn) {
-                System.out.println("-- Encrypted source file contents, appended with digest.");
+                System.out.println("-- Encrypted source file with digest");
+                System.out.println("-- Reading in destination file name");
             }
 
             // get destination file
             System.out.println("Enter the destination file name: ");
             destination = tryReadLine(stdIn);
 
+            System.out.println(String.format("Destination file: %d", destination));
+
             if (debugOn) {
-                System.out.println("-- Read in destination file name.");
+                System.out.println("-- Writing destination file name to server");
             }
-
-
             out.write(destination.getBytes());
             out.flush();
-            if (debugOn) {
-                System.out.println("-- Sent destination file name bytes.");
-            }
+
             Thread.sleep(100);
 
+            if (debugOn) {
+                System.out.println("-- Writing source file size in bytes to server");
+            }
             out.write((byte)(fileBytes.length));
             out.flush();
-            if (debugOn) {
-                System.out.println("-- Sent source file length bytes.");
-            }
+
             Thread.sleep(100);
 
 
+            if (debugOn) {
+                System.out.println("-- Writing ciphertext file to server.");
+            }
             out.write(aes_ciphertext);
             out.flush();
 
-            if (debugOn) {
-                System.out.println("-- Sent ciphertext file bytes.");
-            }
             Thread.sleep(100);
 
-
+            if (debugOn) {
+                System.out.println("-- Waiting for server response");
+            }
             // wait for server answer
             while(in.available() == 0)
                 Thread.sleep(20);
             readServerAnswer(in);
 
             System.out.println ("Client exiting.");
+            if (debugOn) {
+                System.out.println("-- Closing open streams");
+            }
             stdIn.close();
             out.close ();
             sock.close();
@@ -260,8 +277,8 @@ public class Client
         byte[] aes_hashed_seed = Arrays.copyOf(hashed_seed,16);
         this.sec_key_spec = new SecretKeySpec(aes_hashed_seed, "AES");
         if (debugOn) {
-            System.out.println("-- Using seed "+ seed + " to encrypt files.");
-            System.out.println("-- Secret key hash code: " + sec_key_spec.hashCode());
+            System.out.println(String.format("-- Using seed %s to encrypt files.",toHexString(aes_hashed_seed)));
+            System.out.println(String.format("-- Secret key hash code is %d.",this.sec_key_spec.hashCode()));
         }
     }
 
@@ -305,5 +322,35 @@ public class Client
             System.out.println(e);
         }
         return out_bytes;
+    }
+
+    /*
+ * Converts a byte array to hex string
+ * this code from http://java.sun.com/j2se/1.4.2/docs/guide/security/jce/JCERefGuide.html#HmacEx
+ */
+    public static String toHexString(byte[] block) {
+        StringBuffer buf = new StringBuffer();
+
+        int len = block.length;
+
+        for (int i = 0; i < len; i++) {
+            byte2hex(block[i], buf);
+            if (i < len-1) {
+                buf.append(":");
+            }
+        }
+        return buf.toString();
+    }
+    /*
+     * Converts a byte to hex digit and writes to the supplied buffer
+     * this code from http://java.sun.com/j2se/1.4.2/docs/guide/security/jce/JCERefGuide.html#HmacEx
+     */
+    public static void byte2hex(byte b, StringBuffer buf) {
+        char[] hexChars = { '0', '1', '2', '3', '4', '5', '6', '7', '8',
+                '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+        int high = ((b & 0xf0) >> 4);
+        int low = (b & 0x0f);
+        buf.append(hexChars[high]);
+        buf.append(hexChars[low]);
     }
 }

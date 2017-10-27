@@ -87,6 +87,10 @@ public class Server
 	    /* Output connection info for the server */
         System.out.println ("Server IP address: " + serversock.getInetAddress().getHostAddress() + ",  port " + port);
 
+        if (debugOn) {
+            System.out.println(String.format("Debug Server: Getting key (seed) from user"));
+        }
+
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
         System.out.println("Enter the seed for decryption: ");
         String seed = stdIn.readLine();
@@ -97,8 +101,8 @@ public class Server
         this.sec_key_spec = new SecretKeySpec(aes_hashed_seed, "AES");
 
         if (debugOn) {
-            System.out.println(String.format("Server: Using seed %s to encrypt files.",seed));
-            System.out.println(String.format("Server: Secret key hash code is %d.",this.sec_key_spec.hashCode()));
+            System.out.println(String.format("Debug Server: Using seed %s to encrypt files.",toHexString(aes_hashed_seed)));
+            System.out.println(String.format("Debug Server: Secret key hash code is %d.",this.sec_key_spec.hashCode()));
         }
 
 
@@ -203,5 +207,35 @@ public class Server
             System.out.println(nsae);
         }
         return hashval;
+    }
+
+    /*
+ * Converts a byte array to hex string
+ * this code from http://java.sun.com/j2se/1.4.2/docs/guide/security/jce/JCERefGuide.html#HmacEx
+ */
+    public static String toHexString(byte[] block) {
+        StringBuffer buf = new StringBuffer();
+
+        int len = block.length;
+
+        for (int i = 0; i < len; i++) {
+            byte2hex(block[i], buf);
+            if (i < len-1) {
+                buf.append(":");
+            }
+        }
+        return buf.toString();
+    }
+    /*
+     * Converts a byte to hex digit and writes to the supplied buffer
+     * this code from http://java.sun.com/j2se/1.4.2/docs/guide/security/jce/JCERefGuide.html#HmacEx
+     */
+    public static void byte2hex(byte b, StringBuffer buf) {
+        char[] hexChars = { '0', '1', '2', '3', '4', '5', '6', '7', '8',
+                '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+        int high = ((b & 0xf0) >> 4);
+        int low = (b & 0x0f);
+        buf.append(hexChars[high]);
+        buf.append(hexChars[low]);
     }
 }
