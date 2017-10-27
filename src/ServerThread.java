@@ -9,7 +9,6 @@
  * to the client.
  */
 
-import jdk.internal.util.xml.impl.Input;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
