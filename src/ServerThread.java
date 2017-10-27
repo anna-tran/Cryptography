@@ -42,6 +42,9 @@ public class ServerThread extends Thread
 
         this.debugOn = debugOn;
         this.sec_key_spec = sec_key_spec;
+        if (debugOn) {
+            System.out.println(String.format("Debug Server: Secret key hash code is %d.",this.sec_key_spec.hashCode()));
+        }
 
         //create the cipher object that uses AES as the algorithm
         sec_cipher = Cipher.getInstance("AES");
@@ -138,7 +141,7 @@ public class ServerThread extends Thread
             while (is.available() == 0)
                 Thread.sleep(20);
             ciphtext_bytes = new byte[is.available()];
-            readIntoBuffer(is,destination);
+            readIntoBuffer(is,ciphtext_bytes);
 
             if (debugOn) {
                 System.out.println(String.format("-- Client %d: Read in source file contents",idnum));
