@@ -186,7 +186,7 @@ public class Client
             sock.close();
 
         } catch (IOException e) {
-            System.out.println ("Could not read from input.");
+            System.out.println(e.getMessage());
             return;
         }
     }
@@ -218,7 +218,7 @@ public class Client
     private String tryReadLine(BufferedReader stdIn) throws Exception{
         String userInput = stdIn.readLine();
         if (userInput == null)
-            throw new IOException();
+            throw new IOException("ERROR: Could not read user input");
         else
             return userInput;
     }
