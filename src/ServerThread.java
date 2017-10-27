@@ -163,7 +163,6 @@ public class ServerThread extends Thread
                 out_file.close();
                 printDecryptionResult(os, is, 1);
             } else {
-                System.out.println(String.format("Client %d: Message digest is incorrect.",idnum));
                 printDecryptionResult(os, is, -1);
             }
 
@@ -283,7 +282,7 @@ public class ServerThread extends Thread
 
 
         System.arraycopy(decrypted_bytes,0,msg_bytes,0,msg_length);
-        System.arraycopy(decrypted_bytes,msg_bytes.length,digest_bytes,0,digest_bytes.length);
+        System.arraycopy(decrypted_bytes,msg_length,digest_bytes,0,20);
         byte[][] msg_and_digest = new byte[2][];
         msg_and_digest[0] = msg_bytes;
         msg_and_digest[1] = digest_bytes;
