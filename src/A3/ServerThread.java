@@ -52,13 +52,6 @@ public class ServerThread extends Thread
         //create the cipher object that uses AES as the algorithm
         sec_cipher = Cipher.getInstance("AES");
 
-        // create public p and g
-
-        BigInteger q = createQ();
-        BigInteger p = computeP(q);
-        BigInteger g = createG(p,q);
-
-        System.out.println(String.format("p is %l, g is %l", p.longValue(), g.longValue()));
     }
 
     /**
@@ -109,6 +102,8 @@ public class ServerThread extends Thread
 
 	    /* Try to read from the socket */
         try {
+
+            computeSecretKey(is,os);
 
 
 
@@ -192,6 +187,49 @@ public class ServerThread extends Thread
 
     }
 
+    private void computeSecretKey(DataInputStream is, DataOutputStream os) throws Exception {
+        BigInteger q, p, g, b, gPowAModP, gPowBModP, key;
+
+        // create public p and g, by first creating a 511 bit q
+        q = createQ();
+        p = computeP(q);
+        g = createG(p,q);
+
+        System.out.println(String.format("-- Client %d: Sending p to client",idnum));
+        os.write(p.toByteArray());
+        os.flush();
+
+        System.out.println(String.format("-- Client %d: Sending g to client",idnum));
+        os.write(g.toByteArray());
+        os.flush();
+
+        if (debugOn) {
+            System.out.println(String.format("-- Client %d: Generating random number b",idnum));
+        }
+        b = CryptoUtilities.generateSecretNum(p);
+
+        if (debugOn) {
+            System.out.println(String.format("-- Client %d: Waiting for g^a (mod p) from client",idnum));
+        }
+        while(is.available() == 0)
+            Thread.sleep(20);
+        gPowAModP = new BigInteger(readClientAnswer(is));
+
+        gPowBModP = g.modPow(b,p);
+        if (debugOn) {
+            System.out.println("Sending g^b (mod p) to client");
+        }
+        os.write(gPowBModP.toByteArray());
+        os.flush();
+
+        if (debugOn) {
+            System.out.println("Computing key = (g^a)^b (mod p)");
+        }
+        key = gPowAModP.modPow(b,p);
+
+        this.sec_key_spec = CryptoUtilities.createSecKeySpec(key.toByteArray(), debugOn);
+    }
+
     private BigInteger createG(BigInteger p, BigInteger q) {
         if (debugOn) {
             System.out.println(String.format("-- Client %d: Creating g", idnum));
@@ -239,6 +277,20 @@ public class ServerThread extends Thread
         p = q.multiply(two).add(one);
 
         return p;
+    }
+
+    /**
+     * Reads an answer from the client
+     * @param in    the input stream to get responses from the client
+     * @return      the server client as a byte array
+     * @throws Exception    if there was a problem reading the client answer
+     */
+    private byte[] readClientAnswer(InputStream in) throws Exception {
+        byte[] clientAnswer = new byte[in.available()];
+        if ((in.read(clientAnswer)) == -1) {
+            System.out.println("ERROR: Could not read server answer.");
+        }
+        return clientAnswer;
     }
 
     /**
@@ -303,7 +355,7 @@ public class ServerThread extends Thread
             System.out.println(String.format("-- Client %d: Verifying message digest",idnum));
         }
         // verify that digest is the same
-        byte[] msg_digest = sha1_hash(msg_bytes);
+        byte[] msg_digest = CryptoUtilities.sha1_hash(msg_bytes);
 
         boolean verify = Arrays.equals(msg_digest,digest_bytes);
         if (!verify) {
@@ -330,7 +382,7 @@ public class ServerThread extends Thread
         if (debugOn) {
             System.out.println(String.format("-- Client %d: Decrypting file with AES and seed key",idnum));
         }
-        byte[] decrypted_bytes = aes_decrypt(ciphtext);
+        byte[] decrypted_bytes = CryptoUtilities.aes_decrypt(ciphtext,this.sec_cipher,this.sec_key_spec);
         byte[] msg_bytes = new byte[decrypted_bytes.length-20];
         byte[] digest_bytes = new byte[20];
 
@@ -348,48 +400,6 @@ public class ServerThread extends Thread
         msg_and_digest[0] = msg_bytes;
         msg_and_digest[1] = digest_bytes;
         return msg_and_digest;
-    }
-
-    /**
-     * Decrypts byte data with AES
-     * @param data_in       data to decrypt
-     * @return              decrypted data
-     * @throws Exception
-     */
-    public byte[] aes_decrypt(byte[] data_in) throws Exception{
-        byte[] decrypted_bytes = null;
-        try{
-            //set cipher to decrypt mode
-            sec_cipher.init(Cipher.DECRYPT_MODE, sec_key_spec);
-
-            //do decryption
-            decrypted_bytes = sec_cipher.doFinal(data_in);
-        }
-        catch(Exception e){
-            System.out.println(e);
-        }
-        return decrypted_bytes;
-    }
-
-    /**
-     * Encrypts data with AES
-     * @param input_data    data to be encrypted
-     * @return              encrypted data
-     * @throws Exception
-     */
-    public byte[] sha1_hash(byte[] input_data) throws Exception{
-        byte[] hashval = null;
-        try{
-            //create message digest object
-            MessageDigest sha1 = MessageDigest.getInstance("SHA1");
-
-            //make message digest
-            hashval = sha1.digest(input_data);
-        }
-        catch(NoSuchAlgorithmException nsae){
-            System.out.println(nsae);
-        }
-        return hashval;
     }
 
 }

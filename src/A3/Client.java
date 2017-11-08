@@ -12,12 +12,10 @@ package A3; /**
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
 
 public class Client
@@ -76,8 +74,8 @@ public class Client
 	/* Allows us to get input from the keyboard. */
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
         DataOutputStream out;
-        InputStream in;
-        String seed, source, destination;
+        DataInputStream in;
+        String source, destination;
 
 	/* Try to connect to the specified host on the specified port. */
         try {
@@ -98,7 +96,7 @@ public class Client
 
         try {
             out = new DataOutputStream(sock.getOutputStream());
-            in = sock.getInputStream();
+            in = new DataInputStream(sock.getInputStream());
         }
         catch (IOException e) {
             System.out.println ("Could not create output stream.");
@@ -109,21 +107,7 @@ public class Client
 	    /* Wait for the user to type stuff. */
         try {
 
-            // create the seed
-
-
-
-
-            // get seed
-
-            if (debugOn) {
-                System.out.println(String.format("-- Getting key (seed) from user"));
-            }
-
-            System.out.println("Enter the seed for the encryption: ");
-            seed = tryReadLine(stdIn);
-            readSeed(seed);
-
+            computeSecretKey(in,out);
 
             if (debugOn) {
                 System.out.println(String.format("-- Starting file transfer"));
@@ -184,7 +168,7 @@ public class Client
             // wait for server answer
             while(in.available() == 0)
                 Thread.sleep(20);
-            readServerAnswer(in);
+            printServerAnswer(in);
 
             System.out.println ("Client exiting.");
             if (debugOn) {
@@ -200,6 +184,74 @@ public class Client
         }
     }
 
+    /**
+     * Computes the secret key between Client and Server.
+     *  1. Wait for p and g from server, then compute 0 <= a <= p-2.
+     *  2. Send g^a (mod p) to server.
+     *  3. Wait for g^b (mod p) from server.
+     *  4. Compute key = (g^b)^a (mod p)
+     *  5. Passes the key as a byte array createSecKeySpec which generates a keyspec
+     * @param in
+     * @param out
+     * @throws Exception
+     */
+    private void computeSecretKey(DataInputStream in, DataOutputStream out) throws Exception {
+        // wait for p and g value from server
+        BigInteger p, g, a, gPowAModP, gPowBModP, key;
+
+        System.out.println("Waiting for p from server");
+        while(in.available() == 0)
+            Thread.sleep(20);
+        p = new BigInteger(readServerAnswer(in));
+
+        System.out.println("Waiting for g from server");
+        while(in.available() == 0)
+            Thread.sleep(20);
+        g = new BigInteger(readServerAnswer(in));
+
+        if (debugOn) {
+            System.out.println("Generating random number a");
+        }
+        a = CryptoUtilities.generateSecretNum(p);
+
+        gPowAModP = g.modPow(a,p);
+        if (debugOn) {
+            System.out.println("Sending g^a (mod p) to server");
+        }
+        out.write(gPowAModP.toByteArray());
+        out.flush();
+
+        if (debugOn) {
+            System.out.println("Waiting for g^b (mod p) from server");
+        }
+        while(in.available() == 0)
+            Thread.sleep(20);
+        gPowBModP = new BigInteger(readServerAnswer(in));
+
+        if (debugOn) {
+            System.out.println("Computing key = (g^b)^a (mod p)");
+        }
+        key = gPowBModP.modPow(a,p);
+
+        this.sec_key_spec = CryptoUtilities.createSecKeySpec(key.toByteArray(),debugOn);
+
+    }
+
+
+    /**
+     * Reads an answer from the server
+     * @param in    the input stream to get responses from the server
+     * @return      the server answer as a byte array
+     * @throws Exception    if there was a problem reading the server answer
+     */
+    private byte[] readServerAnswer(InputStream in) throws Exception {
+        byte[] serverAnswer = new byte[in.available()];
+        if ((in.read(serverAnswer)) == -1) {
+            System.out.println("ERROR: Could not read server answer.");
+        }
+        return serverAnswer;
+    }
+
 
 
     /**
@@ -208,15 +260,10 @@ public class Client
      * @param in            InputStream from the socket
      * @throws Exception
      */
-    private void readServerAnswer(InputStream in) throws Exception{
-        byte[] serverAnswer = new byte[in.available()];
-        if ((in.read(serverAnswer)) == -1) {
-            System.out.println("ERROR: Could not read server answer.");
-        } else {
-            String serverAnsStr = new String(serverAnswer);
-            System.out.println(serverAnsStr);
-        }
-
+    private void printServerAnswer(InputStream in) throws Exception{
+        byte[] serverAnswer = readServerAnswer(in);
+        String serverAnsStr = new String(serverAnswer);
+        System.out.println(serverAnsStr);
     }
 
 
@@ -245,10 +292,10 @@ public class Client
      */
     private byte[] encryptFile(byte[] msg) throws Exception {
         //create message digest
-        byte[] msg_digest = sha1_hash(msg);
+        byte[] msg_digest = CryptoUtilities.sha1_hash(msg);
         if (debugOn) {
             System.out.println("-- Encrypting message with AES");
-            System.out.println("-- Message Digest: " + toHexString(msg_digest));
+            System.out.println("-- Message Digest: " + CryptoUtilities.toHexString(msg_digest));
         }
 
 
@@ -257,7 +304,7 @@ public class Client
         System.arraycopy(msg_digest,0,new_msg,msg.length,20);
 
         //do AES encryption
-        return aes_encrypt(new_msg);
+        return CryptoUtilities.aes_encrypt(new_msg, this.sec_cipher, this.sec_key_spec);
 
     }
 
@@ -277,91 +324,6 @@ public class Client
         return msg;
     }
 
-    /**
-     * Transform the user given seed to a secret key specification
-     * @param seed          seed string to transform
-     * @throws Exception
-     */
-    private void readSeed(String seed) throws Exception{
 
-        byte[] hashed_seed =  sha1_hash(seed.getBytes());
-        byte[] aes_hashed_seed = Arrays.copyOf(hashed_seed,16);
-        this.sec_key_spec = new SecretKeySpec(aes_hashed_seed, "AES");
-        if (debugOn) {
-            System.out.println(String.format("-- Using seed %s to encrypt files.",toHexString(aes_hashed_seed)));
-            System.out.println(String.format("-- Secret key hash code is %d.",this.sec_key_spec.hashCode()));
-        }
-    }
 
-    /**
-     * Encrypts data with AES
-     * @param input_data    data to be encrypted
-     * @return              encrypted data
-     * @throws Exception
-     */
-    public byte[] sha1_hash(byte[] input_data) throws Exception{
-        byte[] hashval = null;
-        try{
-            //create message digest object
-            MessageDigest sha1 = MessageDigest.getInstance("SHA1");
-
-            //make message digest
-            hashval = sha1.digest(input_data);
-        }
-        catch(NoSuchAlgorithmException nsae){
-            System.out.println(nsae);
-        }
-        return hashval;
-    }
-
-    /**
-     * Encrypts byte data with AES
-     * @param data_in       data to encrypt
-     * @return              encrypted data
-     * @throws Exception
-     */
-    public byte[] aes_encrypt(byte[] data_in) throws Exception{
-        byte[] out_bytes = null;
-        try{
-            //set cipher object to encrypt mode
-            sec_cipher.init(Cipher.ENCRYPT_MODE, sec_key_spec);
-
-            //create ciphertext
-            out_bytes = sec_cipher.doFinal(data_in);
-        }
-        catch(Exception e){
-            System.out.println(e);
-        }
-        return out_bytes;
-    }
-
-    /*
- * Converts a byte array to hex string
- * this code from http://java.sun.com/j2se/1.4.2/docs/guide/security/jce/JCERefGuide.html#HmacEx
- */
-    public static String toHexString(byte[] block) {
-        StringBuffer buf = new StringBuffer();
-
-        int len = block.length;
-
-        for (int i = 0; i < len; i++) {
-            byte2hex(block[i], buf);
-            if (i < len-1) {
-                buf.append(":");
-            }
-        }
-        return buf.toString();
-    }
-    /*
-     * Converts a byte to hex digit and writes to the supplied buffer
-     * this code from http://java.sun.com/j2se/1.4.2/docs/guide/security/jce/JCERefGuide.html#HmacEx
-     */
-    public static void byte2hex(byte b, StringBuffer buf) {
-        char[] hexChars = { '0', '1', '2', '3', '4', '5', '6', '7', '8',
-                '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-        int high = ((b & 0xf0) >> 4);
-        int low = (b & 0x0f);
-        buf.append(hexChars[high]);
-        buf.append(hexChars[low]);
-    }
 }
