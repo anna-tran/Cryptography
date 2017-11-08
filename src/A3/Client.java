@@ -1,4 +1,4 @@
-/**
+package A3; /**
  * Structure taken from the CPSC 418 - Fall 2017 website.
  * Modified by: Anna Tran
  * Student ID: 10128425
@@ -107,6 +107,12 @@ public class Client
 
 	    /* Wait for the user to type stuff. */
         try {
+
+            // create the seed
+
+
+
+
             // get seed
 
             if (debugOn) {
@@ -192,6 +198,8 @@ public class Client
             return;
         }
     }
+
+
 
     /**
      * Read response from the server and print it out to standard output

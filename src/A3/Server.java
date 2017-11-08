@@ -1,4 +1,4 @@
-/**
+package A3; /**
  * Structure taken from the CPSC 418 - Fall 2017 website.
  * Modified by: Anna Tran
  * Student ID: 10128425
@@ -86,26 +86,6 @@ public class Server
 
 	    /* Output connection info for the server */
         System.out.println ("Server IP address: " + serversock.getInetAddress().getHostAddress() + ",  port " + port);
-
-        if (debugOn) {
-            System.out.println(String.format("Debug Server: Getting key (seed) from user"));
-        }
-
-        BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
-        System.out.println("Enter the seed for decryption: ");
-        String seed = stdIn.readLine();
-
-        //key setup - generate 128 bit key
-        byte[] hashed_seed =  sha1_hash(seed.getBytes());
-        byte[] aes_hashed_seed = Arrays.copyOf(hashed_seed,16);
-        this.sec_key_spec = new SecretKeySpec(aes_hashed_seed, "AES");
-
-        if (debugOn) {
-            System.out.println(String.format("Debug Server: Using seed %s to encrypt files.",toHexString(aes_hashed_seed)));
-            System.out.println(String.format("Debug Server: Secret key hash code is %d.",this.sec_key_spec.hashCode()));
-        }
-
-
 
 	    /* listen on the socket for connections. */
         listen ();
