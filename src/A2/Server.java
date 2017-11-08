@@ -1,4 +1,4 @@
-/**
+package A2; /**
  * Structure taken from the CPSC 418 - Fall 2017 website.
  * Modified by: Anna Tran
  * Student ID: 10128425
@@ -9,14 +9,11 @@
  * a thread is spawned to deal with the client.
  */
 
-import A2.ServerThread;
-
 import javax.crypto.spec.SecretKeySpec;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -52,7 +49,7 @@ public class Server
                 System.out.println ("Usage: java Server port#");
                 return;
             }
-            Server s = new Server(Integer.parseInt(args[0]),debugOn);
+            Server s = new Server (Integer.parseInt(args[0]),debugOn);
         }
         catch (ArrayIndexOutOfBoundsException e) {
             System.out.println ("Usage: java Server port#");
@@ -185,7 +182,7 @@ public class Server
                 /* Create a new thread to deal with the client, add it to the vector of open connections.
                  * Finally, start the thread's execution. Start method makes the threads go by calling their
                  * run() methods. */
-                st = new ServerThread(client, this, clientcounter++,this.sec_key_spec,debugOn);
+                st = new ServerThread (client, this, clientcounter++,this.sec_key_spec,debugOn);
                 serverthreads.add (st);
                 st.start ();
             }
