@@ -1,4 +1,4 @@
-package A3; /**
+package A2; /**
  * Structure taken from the CPSC 418 - Fall 2017 website.
  * Modified by: Anna Tran
  * Student ID: 10128425
@@ -12,14 +12,11 @@ package A3; /**
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
+import java.net.*;
 import java.io.*;
-import java.math.BigInteger;
-import java.net.Socket;
-import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.util.Random;
 
 
 public class ServerThread extends Thread
@@ -102,12 +99,6 @@ public class ServerThread extends Thread
 	    /* Try to read from the socket */
         try {
 
-            // create public p and g
-            BigInteger q = createQ();
-            BigInteger p = computeP(q);
-            BigInteger g = createG(p,q);
-
-            System.out.println(String.format("p is %l, g is %l", p.longValue(), g.longValue()));
 
             if (debugOn) {
                 System.out.println(String.format("-- Client %d: Starting file transfer",idnum));
@@ -187,46 +178,6 @@ public class ServerThread extends Thread
             return;
         }
 
-    }
-
-    private BigInteger createG(BigInteger p, BigInteger q) {
-        // find a primitive root g of p in range (2, p-2)
-        BigInteger g = new BigInteger("2");
-        BigInteger one = new BigInteger("1");
-
-        BigInteger pMinus2 = p.subtract(one).subtract(one);
-
-        BigInteger result;
-
-        // while g <= p-2
-        while (g.compareTo(pMinus2) < 1) {
-            result = g.modPow(q,p);
-            if (!result.equals(one)) {
-                return g;
-            }
-
-            g = g.add(one);
-        }
-
-        return g;
-    }
-
-    private BigInteger createQ() {
-        BigInteger q, p;
-        do {
-            q = new BigInteger(511, 3, new Random());
-            p = computeP(q);
-        } while (p.isProbablePrime(3));
-        return q;
-    }
-
-    private BigInteger computeP(BigInteger q) {
-        BigInteger two, one, p;
-        two = new BigInteger("2");
-        one = new BigInteger("1");
-        p = q.multiply(two).add(one);
-
-        return p;
     }
 
     /**

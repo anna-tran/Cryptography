@@ -1,4 +1,4 @@
-package A3; /**
+package A2; /**
  * Structure taken from the CPSC 418 - Fall 2017 website.
  * Modified by: Anna Tran
  * Student ID: 10128425
@@ -12,9 +12,7 @@ package A3; /**
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -51,7 +49,7 @@ public class Client
                 return;
             }
 
-            Client c = new Client(args[0], Integer.parseInt(args[1]),debugOn);
+            Client c = new Client (args[0], Integer.parseInt(args[1]),debugOn);
 
         }
         catch (NumberFormatException e) {
@@ -108,12 +106,6 @@ public class Client
 
 	    /* Wait for the user to type stuff. */
         try {
-
-            // create the seed
-
-
-
-
             // get seed
 
             if (debugOn) {
@@ -199,8 +191,6 @@ public class Client
             return;
         }
     }
-
-
 
     /**
      * Read response from the server and print it out to standard output

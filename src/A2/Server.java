@@ -1,4 +1,4 @@
-package A3; /**
+package A2; /**
  * Structure taken from the CPSC 418 - Fall 2017 website.
  * Modified by: Anna Tran
  * Student ID: 10128425
@@ -9,13 +9,11 @@ package A3; /**
  * a thread is spawned to deal with the client.
  */
 
-
 import javax.crypto.spec.SecretKeySpec;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -51,7 +49,7 @@ public class Server
                 System.out.println ("Usage: java Server port#");
                 return;
             }
-            Server s = new Server(Integer.parseInt(args[0]),debugOn);
+            Server s = new Server (Integer.parseInt(args[0]),debugOn);
         }
         catch (ArrayIndexOutOfBoundsException e) {
             System.out.println ("Usage: java Server port#");
@@ -88,6 +86,26 @@ public class Server
 
 	    /* Output connection info for the server */
         System.out.println ("Server IP address: " + serversock.getInetAddress().getHostAddress() + ",  port " + port);
+
+        if (debugOn) {
+            System.out.println(String.format("Debug Server: Getting key (seed) from user"));
+        }
+
+        BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
+        System.out.println("Enter the seed for decryption: ");
+        String seed = stdIn.readLine();
+
+        //key setup - generate 128 bit key
+        byte[] hashed_seed =  sha1_hash(seed.getBytes());
+        byte[] aes_hashed_seed = Arrays.copyOf(hashed_seed,16);
+        this.sec_key_spec = new SecretKeySpec(aes_hashed_seed, "AES");
+
+        if (debugOn) {
+            System.out.println(String.format("Debug Server: Using seed %s to encrypt files.",toHexString(aes_hashed_seed)));
+            System.out.println(String.format("Debug Server: Secret key hash code is %d.",this.sec_key_spec.hashCode()));
+        }
+
+
 
 	    /* listen on the socket for connections. */
         listen ();
@@ -164,7 +182,7 @@ public class Server
                 /* Create a new thread to deal with the client, add it to the vector of open connections.
                  * Finally, start the thread's execution. Start method makes the threads go by calling their
                  * run() methods. */
-                st = new ServerThread(client, this, clientcounter++,this.sec_key_spec,debugOn);
+                st = new ServerThread (client, this, clientcounter++,this.sec_key_spec,debugOn);
                 serverthreads.add (st);
                 st.start ();
             }
