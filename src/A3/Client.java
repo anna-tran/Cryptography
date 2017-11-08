@@ -201,12 +201,12 @@ public class Client
 
         System.out.println("Waiting for p from server");
         while(in.available() == 0)
-            Thread.sleep(20);
+            Thread.sleep(50);
         p = new BigInteger(readServerAnswer(in));
 
         System.out.println("Waiting for g from server");
         while(in.available() == 0)
-            Thread.sleep(20);
+            Thread.sleep(50);
         g = new BigInteger(readServerAnswer(in));
 
         if (debugOn) {

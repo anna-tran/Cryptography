@@ -199,6 +199,8 @@ public class ServerThread extends Thread
         os.write(p.toByteArray());
         os.flush();
 
+        Thread.sleep(100);
+
         System.out.println(String.format("-- Client %d: Sending g to client",idnum));
         os.write(g.toByteArray());
         os.flush();
