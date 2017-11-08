@@ -35,22 +35,30 @@ public class ServerThread extends Thread
     /**
      * Constructor, does the usual stuff.
      * @param s Communication Socket.
-     * @param p Reference to parent thread.
+     * @param parent Reference to parent thread.
      * @param id ID Number.
      */
-    public ServerThread (Socket s, Server p, int id, SecretKeySpec sec_key_spec, boolean debugOn) throws Exception {
-        parent = p;
-        sock = s;
-        idnum = id;
+    public ServerThread (Socket s, Server parent, int id, boolean debugOn) throws Exception {
+        this.parent = parent;
+        this.sock = s;
+        this.idnum = id;
 
         this.debugOn = debugOn;
-        this.sec_key_spec = sec_key_spec;
-        if (debugOn) {
-            System.out.println(String.format("Debug Server: Secret key hash code is %d.",this.sec_key_spec.hashCode()));
-        }
+//        this.sec_key_spec = sec_key_spec;
+//        if (debugOn) {
+//            System.out.println(String.format("Debug Server: Secret key hash code is %d.",this.sec_key_spec.hashCode()));
+//        }
 
         //create the cipher object that uses AES as the algorithm
         sec_cipher = Cipher.getInstance("AES");
+
+        // create public p and g
+
+        BigInteger q = createQ();
+        BigInteger p = computeP(q);
+        BigInteger g = createG(p,q);
+
+        System.out.println(String.format("p is %l, g is %l", p.longValue(), g.longValue()));
     }
 
     /**
@@ -102,13 +110,7 @@ public class ServerThread extends Thread
 	    /* Try to read from the socket */
         try {
 
-            // create public p and g
 
-            BigInteger q = createQ();
-            BigInteger p = computeP(q);
-            BigInteger g = createG(p,q);
-
-            System.out.println(String.format("p is %l, g is %l", p.longValue(), g.longValue()));
 
             if (debugOn) {
                 System.out.println(String.format("-- Client %d: Starting file transfer",idnum));

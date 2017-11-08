@@ -161,7 +161,7 @@ public class Server
                 /* Create a new thread to deal with the client, add it to the vector of open connections.
                  * Finally, start the thread's execution. Start method makes the threads go by calling their
                  * run() methods. */
-                st = new ServerThread(client, this, clientcounter++,this.sec_key_spec,debugOn);
+                st = new ServerThread(client, this, clientcounter++,debugOn);
                 serverthreads.add (st);
                 st.start ();
             }
