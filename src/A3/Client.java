@@ -107,6 +107,7 @@ public class Client
 	    /* Wait for the user to type stuff. */
         try {
 
+            System.out.println("Starting Diffie-Hellman key exchange.");
             computeSecretKey(in,out);
 
             if (debugOn) {
@@ -199,37 +200,45 @@ public class Client
         // wait for p and g value from server
         BigInteger p, g, a, gPowAModP, gPowBModP, key;
 
-        System.out.println("Waiting for p from server");
+        if (debugOn) {
+            System.out.println("-- Waiting for p from server");
+        }
         while(in.available() == 0)
             Thread.sleep(50);
         p = new BigInteger(readServerAnswer(in));
 
-        System.out.println("Waiting for g from server");
+        if (debugOn) {
+            System.out.println("-- Waiting for g from server");
+        }
         while(in.available() == 0)
             Thread.sleep(50);
         g = new BigInteger(readServerAnswer(in));
 
         if (debugOn) {
-            System.out.println("Generating random number a");
+            System.out.println("-- Generating random number a");
         }
         a = CryptoUtilities.generateSecretNum(p);
 
         gPowAModP = g.modPow(a,p);
         if (debugOn) {
-            System.out.println("Sending g^a (mod p) to server");
+            System.out.println(String.format("-- Hash code of g^a (mod p) is %s", CryptoUtilities
+                    .toHexString(gPowAModP.toByteArray())));
+            System.out.println("-- Sending g^a (mod p) to server");
         }
         out.write(gPowAModP.toByteArray());
         out.flush();
 
+        Thread.sleep(100);
+
         if (debugOn) {
-            System.out.println("Waiting for g^b (mod p) from server");
+            System.out.println("-- Waiting for g^b (mod p) from server");
         }
         while(in.available() == 0)
             Thread.sleep(20);
         gPowBModP = new BigInteger(readServerAnswer(in));
 
         if (debugOn) {
-            System.out.println("Computing key = (g^b)^a (mod p)");
+            System.out.println("-- Computing key = (g^b)^a (mod p)");
         }
         key = gPowBModP.modPow(a,p);
 

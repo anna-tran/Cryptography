@@ -104,9 +104,7 @@ public class ServerThread extends Thread
         try {
 
             computeSecretKey(is,os);
-
-
-
+            
             if (debugOn) {
                 System.out.println(String.format("-- Client %d: Starting file transfer",idnum));
                 System.out.println(String.format("-- Client %d: Waiting for destination file name",idnum));
@@ -217,12 +215,16 @@ public class ServerThread extends Thread
             Thread.sleep(20);
         gPowAModP = new BigInteger(readClientAnswer(is));
 
-        gPowBModP = g.modPow(b,p);
         if (debugOn) {
-            System.out.println("Sending g^b (mod p) to client");
+            System.out.println(String.format("-- Client %d: Hash code of g^a (mod p) is %s",idnum, CryptoUtilities
+                    .toHexString(gPowAModP.toByteArray())));
+            System.out.println(String.format("-- Client %d: Sending g^b (mod p) to client",idnum));
         }
+        gPowBModP = g.modPow(b,p);
         os.write(gPowBModP.toByteArray());
         os.flush();
+
+        Thread.sleep(100);
 
         if (debugOn) {
             System.out.println("Computing key = (g^a)^b (mod p)");
