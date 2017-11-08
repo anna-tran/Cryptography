@@ -11,14 +11,11 @@ package A3; /**
 
 
 import javax.crypto.spec.SecretKeySpec;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.Vector;
 
 public class Server

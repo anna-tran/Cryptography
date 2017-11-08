@@ -103,6 +103,7 @@ public class ServerThread extends Thread
         try {
 
             // create public p and g
+
             BigInteger q = createQ();
             BigInteger p = computeP(q);
             BigInteger g = createG(p,q);
@@ -190,6 +191,9 @@ public class ServerThread extends Thread
     }
 
     private BigInteger createG(BigInteger p, BigInteger q) {
+        if (debugOn) {
+            System.out.println(String.format("-- Client %d: Creating g", idnum));
+        }
         // find a primitive root g of p in range (2, p-2)
         BigInteger g = new BigInteger("2");
         BigInteger one = new BigInteger("1");
@@ -212,6 +216,9 @@ public class ServerThread extends Thread
     }
 
     private BigInteger createQ() {
+        if (debugOn) {
+            System.out.println(String.format("-- Client %d: Creating q", idnum));
+        }
         BigInteger q, p;
         do {
             q = new BigInteger(511, 3, new Random());
@@ -221,6 +228,9 @@ public class ServerThread extends Thread
     }
 
     private BigInteger computeP(BigInteger q) {
+        if (debugOn) {
+            System.out.println(String.format("-- Client %d: Computing p", idnum));
+        }
         BigInteger two, one, p;
         two = new BigInteger("2");
         one = new BigInteger("1");
