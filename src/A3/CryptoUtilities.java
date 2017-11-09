@@ -1,5 +1,14 @@
 package A3;
 
+/**
+ * Functions taken from demo.java found on the CPSC 418 - Fall 2017 website.
+ * Modified by: Anna Tran
+ * Student ID: 10128425
+ * File: CryptoUtilities.java
+ *
+ * Utilities to use for cryptographic operations.
+ */
+
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.math.BigInteger;
@@ -109,9 +118,9 @@ public class CryptoUtilities {
 
 
     /*
- * Converts a byte array to hex string
- * this code from http://java.sun.com/j2se/1.4.2/docs/guide/security/jce/JCERefGuide.html#HmacEx
- */
+    * Converts a byte array to hex string
+    * this code from http://java.sun.com/j2se/1.4.2/docs/guide/security/jce/JCERefGuide.html#HmacEx
+    */
     public static String toHexString(byte[] block) {
         StringBuffer buf = new StringBuffer();
 

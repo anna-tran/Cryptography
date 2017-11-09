@@ -1,4 +1,5 @@
-package A3; /**
+package A3;
+/**
  * Structure taken from the CPSC 418 - Fall 2017 website.
  * Modified by: Anna Tran
  * Student ID: 10128425
@@ -193,13 +194,13 @@ public class Client
 
     /**
      * Computes the secret key between Client and Server.
-     *  1. Wait for p and g from server, then compute 0 <= a <= p-2.
+     *  1. Wait for p and g from server, then find an a such that 0 <= a <= p-2.
      *  2. Send g^a (mod p) to server.
      *  3. Wait for g^b (mod p) from server.
      *  4. Compute key = (g^b)^a (mod p)
      *  5. Passes the key as a byte array createSecKeySpec which generates a keyspec
-     * @param in
-     * @param out
+     * @param in        DataInputStream to Server
+     * @param out       DataOutputStream from Server
      * @throws Exception
      */
     private void computeSecretKey(DataInputStream in, DataOutputStream out) throws Exception {
@@ -244,6 +245,8 @@ public class Client
         gPowBModP = new BigInteger(readServerAnswer(in));
 
         if (debugOn) {
+            System.out.println(String.format("-- Hash code of g^b (mod p) is %s", CryptoUtilities
+                    .toHexString(gPowBModP.toByteArray())));
             System.out.println("-- Computing key = (g^b)^a (mod p)");
         }
         key = gPowBModP.modPow(a,p);

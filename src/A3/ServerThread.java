@@ -1,4 +1,5 @@
-package A3; /**
+package A3;
+/**
  * Structure taken from the CPSC 418 - Fall 2017 website.
  * Modified by: Anna Tran
  * Student ID: 10128425
@@ -16,8 +17,6 @@ import java.io.*;
 import java.math.BigInteger;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -44,11 +43,6 @@ public class ServerThread extends Thread
         this.idnum = id;
 
         this.debugOn = debugOn;
-//        this.sec_key_spec = sec_key_spec;
-//        if (debugOn) {
-//            System.out.println(String.format("Debug Server: Secret key hash code is %d.",this.sec_key_spec.hashCode()));
-//        }
-
         //create the cipher object that uses AES as the algorithm
         sec_cipher = Cipher.getInstance("AES");
 
@@ -189,6 +183,17 @@ public class ServerThread extends Thread
 
     }
 
+    /**
+     * Computes the secret key between Client and Server.
+     *  1. Wait for p and g from server, then find a b such that 0 <= b <= p-2.
+     *  2. Send g^a (mod p) to server.
+     *  3. Wait for g^b (mod p) from server.
+     *  4. Compute key = (g^b)^a (mod p)
+     *  5. Passes the key as a byte array createSecKeySpec which generates a keyspec
+     * @param is            DataInputStream to client
+     * @param os            DataOutputStream from client
+     * @throws Exception
+     */
     private void computeSecretKey(DataInputStream is, DataOutputStream os) throws Exception {
         BigInteger q, p, g, b, gPowAModP, gPowBModP, key;
 
@@ -219,12 +224,14 @@ public class ServerThread extends Thread
             Thread.sleep(20);
         gPowAModP = new BigInteger(readClientAnswer(is));
 
+        gPowBModP = g.modPow(b,p);
         if (debugOn) {
             System.out.println(String.format("-- Client %d: Hash code of g^a (mod p) is %s",idnum, CryptoUtilities
                     .toHexString(gPowAModP.toByteArray())));
             System.out.println(String.format("-- Client %d: Sending g^b (mod p) to client",idnum));
+            System.out.println(String.format("-- Client %d: Hash code of g^b (mod p) is %s",idnum, CryptoUtilities
+                    .toHexString(gPowBModP.toByteArray())));
         }
-        gPowBModP = g.modPow(b,p);
         os.write(gPowBModP.toByteArray());
         os.flush();
 
@@ -238,14 +245,22 @@ public class ServerThread extends Thread
         this.sec_key_spec = CryptoUtilities.createSecKeySpec(key.toByteArray(), debugOn);
     }
 
+    /**
+     * Create a primitive root g of p
+     * @param p     a large prime
+     * @param q     a large prime that generates p
+     * @return  primitive root g of p
+     */
     private BigInteger createG(BigInteger p, BigInteger q) {
         if (debugOn) {
             System.out.println(String.format("-- Client %d: Creating g", idnum));
         }
-        // find a primitive root g of p in range (2, p-2)
+
+        // g = 2 initially
         BigInteger g = new BigInteger("2");
         BigInteger one = new BigInteger("1");
 
+        // BigInteger representation of p - 2
         BigInteger pMinus2 = p.subtract(one).subtract(one);
 
         BigInteger result;
@@ -253,6 +268,8 @@ public class ServerThread extends Thread
         // while g <= p-2
         while (g.compareTo(pMinus2) < 1) {
             result = g.modPow(q,p);
+
+            // if g^q (mod p) equivalent to 1
             if (!result.equals(one)) {
                 return g;
             }
@@ -263,6 +280,10 @@ public class ServerThread extends Thread
         return g;
     }
 
+    /**
+     * Creates a large prime q such that p = 2q+1 is prime
+     * @return  q
+     */
     private BigInteger createQ() {
         if (debugOn) {
             System.out.println(String.format("-- Client %d: Creating q", idnum));
@@ -275,6 +296,11 @@ public class ServerThread extends Thread
         return q;
     }
 
+    /**
+     * Computes the value of p = 2q+1 given q
+     * @param q a large prime value to generate p
+     * @return  p
+     */
     private BigInteger computeP(BigInteger q) {
         if (debugOn) {
             System.out.println(String.format("-- Client %d: Computing p", idnum));
