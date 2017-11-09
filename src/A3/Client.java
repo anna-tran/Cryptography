@@ -136,11 +136,17 @@ public class Client
             System.out.println("Enter the destination file name: ");
             destination = tryReadLine(stdIn);
 
+            if (debugOn) {
+                System.out.println(String.format("-- Destination file hex %s",CryptoUtilities
+                        .toHexString(destination.getBytes())));
+            }
             System.out.println(String.format("Destination file: %s", destination));
 
             if (debugOn) {
                 System.out.println("-- Writing destination file name to server");
+                System.out.println("-- Destination file bytes to server");
             }
+            out.flush();
             out.writeBytes(destination);
             out.flush();
 
@@ -306,7 +312,6 @@ public class Client
             System.out.println("-- Encrypting message with AES");
             System.out.println("-- Message Digest: " + CryptoUtilities.toHexString(msg_digest));
         }
-
 
         byte[] new_msg = new byte[msg.length + 20];
         System.arraycopy(msg,0,new_msg,0,msg.length);

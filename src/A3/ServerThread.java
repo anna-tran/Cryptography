@@ -104,7 +104,7 @@ public class ServerThread extends Thread
         try {
 
             computeSecretKey(is,os);
-            
+
             if (debugOn) {
                 System.out.println(String.format("-- Client %d: Starting file transfer",idnum));
                 System.out.println(String.format("-- Client %d: Waiting for destination file name",idnum));
@@ -116,6 +116,10 @@ public class ServerThread extends Thread
                 Thread.sleep(20);
             destination = new byte[is.available()];
             readIntoBuffer(is,destination);
+            if (debugOn) {
+                System.out.println(String.format("-- Client %d: Destination file hex %s",idnum,CryptoUtilities
+                        .toHexString(destination)));
+            }
             String destFileName = new String(destination);
 
             System.out.println(String.format("Client %d: Output file -- %s", idnum, destFileName));
@@ -305,7 +309,6 @@ public class ServerThread extends Thread
      * @throws Exception    if input stream cannot read bytes to buffer
      */
     private void readIntoBuffer(DataInputStream is, byte[] buffer) throws Exception{
-
         int result = is.read(buffer);
         if (result == -1)
             throw new IOException();
