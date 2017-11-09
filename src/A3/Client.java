@@ -215,7 +215,7 @@ public class Client
         p = new BigInteger(readServerAnswer(in));
 
         if (debugOn) {
-            System.out.println(String.format("-- bit count of p = %d", p.bitCount()));
+            System.out.println(String.format("-- bit length of p = %d", p.bitLength()));
             System.out.println(String.format("-- p = %s", CryptoUtilities.toHexString(p.toByteArray())));
             System.out.println("-- Waiting for g from server");
         }

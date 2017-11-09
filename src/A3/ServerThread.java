@@ -203,14 +203,14 @@ public class ServerThread extends Thread
         q = createQ();
 
         if (debugOn) {
-            System.out.println(String.format("-- Client %d: bit count of q = %d",idnum, q.bitCount()));
+            System.out.println(String.format("-- Client %d: bit length of q = %d",idnum, q.bitLength()));
             System.out.println(String.format("-- Client %d: q = %s",idnum, CryptoUtilities
                     .toHexString(q.toByteArray())));
         }
         p = computeP(q);
 
         if (debugOn) {
-            System.out.println(String.format("-- Client %d: bit count of p = %d",idnum, p.bitCount()));
+            System.out.println(String.format("-- Client %d: bit length of p = %d",idnum, p.bitLength()));
             System.out.println(String.format("-- Client %d: p = %s",idnum, CryptoUtilities
                     .toHexString(p.toByteArray())));
         }
