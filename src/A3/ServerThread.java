@@ -198,9 +198,27 @@ public class ServerThread extends Thread
         BigInteger q, p, g, b, gPowAModP, gPowBModP, key;
 
         // create public p and g, by first creating a 511 bit q
+
+
         q = createQ();
+
+        if (debugOn) {
+            System.out.println(String.format("-- Client %d: bit count of q = %d",idnum, q.bitCount()));
+            System.out.println(String.format("-- Client %d: q = %s",idnum, CryptoUtilities
+                    .toHexString(q.toByteArray())));
+        }
         p = computeP(q);
+
+        if (debugOn) {
+            System.out.println(String.format("-- Client %d: bit count of p = %d",idnum, p.bitCount()));
+            System.out.println(String.format("-- Client %d: p = %s",idnum, CryptoUtilities
+                    .toHexString(p.toByteArray())));
+        }
         g = createG(p,q);
+        if (debugOn) {
+            System.out.println(String.format("-- Client %d: g = %s",idnum, CryptoUtilities
+                    .toHexString(g.toByteArray())));
+        }
 
         System.out.println(String.format("-- Client %d: Sending p to client",idnum));
         os.write(p.toByteArray());
@@ -218,6 +236,8 @@ public class ServerThread extends Thread
         b = CryptoUtilities.generateSecretNum(p);
 
         if (debugOn) {
+            System.out.println(String.format("-- Client %d: b = %s",idnum, CryptoUtilities
+                    .toHexString(b.toByteArray())));
             System.out.println(String.format("-- Client %d: Waiting for g^a (mod p) from client",idnum));
         }
         while(is.available() == 0)

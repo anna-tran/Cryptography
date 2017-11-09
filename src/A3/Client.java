@@ -215,6 +215,8 @@ public class Client
         p = new BigInteger(readServerAnswer(in));
 
         if (debugOn) {
+            System.out.println(String.format("-- bit count of p = %d", p.bitCount()));
+            System.out.println(String.format("-- p = %s", CryptoUtilities.toHexString(p.toByteArray())));
             System.out.println("-- Waiting for g from server");
         }
         while(in.available() == 0)
@@ -222,13 +224,15 @@ public class Client
         g = new BigInteger(readServerAnswer(in));
 
         if (debugOn) {
+            System.out.println(String.format("-- g = %s", CryptoUtilities.toHexString(g.toByteArray())));
             System.out.println("-- Generating random number a");
         }
         a = CryptoUtilities.generateSecretNum(p);
 
         gPowAModP = g.modPow(a,p);
         if (debugOn) {
-            System.out.println(String.format("-- Hash code of g^a (mod p) is %s", CryptoUtilities
+            System.out.println(String.format("-- a = %s", CryptoUtilities.toHexString(a.toByteArray())));
+            System.out.println(String.format("-- g^a (mod p) = %s", CryptoUtilities
                     .toHexString(gPowAModP.toByteArray())));
             System.out.println("-- Sending g^a (mod p) to server");
         }
@@ -245,7 +249,7 @@ public class Client
         gPowBModP = new BigInteger(readServerAnswer(in));
 
         if (debugOn) {
-            System.out.println(String.format("-- Hash code of g^b (mod p) is %s", CryptoUtilities
+            System.out.println(String.format("-- g^b (mod p) = %s", CryptoUtilities
                     .toHexString(gPowBModP.toByteArray())));
             System.out.println("-- Computing key = (g^b)^a (mod p)");
         }
