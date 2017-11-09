@@ -147,7 +147,7 @@ public class Client
                 System.out.println("-- Destination file bytes to server");
             }
             out.flush();
-            out.writeBytes(destination);
+            out.write(destination.getBytes());
             out.flush();
 
             Thread.sleep(100);
