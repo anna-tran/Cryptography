@@ -204,19 +204,19 @@ public class ServerThread extends Thread
 
         if (debugOn) {
             System.out.println(String.format("-- Client %d: bit length of q = %d",idnum, q.bitLength()));
-            System.out.println(String.format("-- Client %d: q = %s",idnum, CryptoUtilities
+            System.out.println(String.format("-- Client %d: Hash code of q = %s",idnum, CryptoUtilities
                     .toHexString(q.toByteArray())));
         }
         p = computeP(q);
 
         if (debugOn) {
             System.out.println(String.format("-- Client %d: bit length of p = %d",idnum, p.bitLength()));
-            System.out.println(String.format("-- Client %d: p = %s",idnum, CryptoUtilities
+            System.out.println(String.format("-- Client %d: Hash code of p = %s",idnum, CryptoUtilities
                     .toHexString(p.toByteArray())));
         }
         g = createG(p,q);
         if (debugOn) {
-            System.out.println(String.format("-- Client %d: g = %s",idnum, CryptoUtilities
+            System.out.println(String.format("-- Client %d: Hash code of g = %s",idnum, CryptoUtilities
                     .toHexString(g.toByteArray())));
         }
 
@@ -236,7 +236,7 @@ public class ServerThread extends Thread
         b = CryptoUtilities.generateSecretNum(p);
 
         if (debugOn) {
-            System.out.println(String.format("-- Client %d: b = %s",idnum, CryptoUtilities
+            System.out.println(String.format("-- Client %d: Hash code of b = %s",idnum, CryptoUtilities
                     .toHexString(b.toByteArray())));
             System.out.println(String.format("-- Client %d: Waiting for g^a (mod p) from client",idnum));
         }
